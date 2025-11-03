@@ -11,13 +11,13 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'index' %}">
+            <a class="navbar-brand" href="{% url 'Search:index' %}">
                 <i class="fas fa-search"></i> Document Search
             </a>
             <div class="navbar-nav">
-                <a class="nav-link" href="{% url 'index' %}">Поиск</a>
-                <a class="nav-link" href="{% url 'create-document' %}">Добавить документ</a>
-                <a class="nav-link" href="{% url 'admin-documents' %}">Управление</a>
+                <a class="nav-link" href="{% url 'Search:index' %}">Поиск</a>
+                <a class="nav-link" href="{% url 'Search:create-document' %}">Добавить документ</a>
+                <a class="nav-link" href="{% url 'Search:admin-documents' %}">Управление</a>
                 <a class="nav-link" href="/swagger/">API Docs</a>
             </div>
         </div>

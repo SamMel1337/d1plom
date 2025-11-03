@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'Search/base.html' %}
 
 {% block title %}Добавить документ{% endblock %}
 
@@ -45,7 +45,7 @@
                         <button type="submit" class="btn btn-success btn-lg">
                             <i class="fas fa-save me-2"></i>Сохранить документ
                         </button>
-                        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+                        <a href="{% url 'Search:index' %}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Вернуться к поиску
                         </a>
                     </div>

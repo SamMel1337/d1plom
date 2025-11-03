@@ -1,21 +1,29 @@
+from django_elasticsearch_dsl import  fields
 from django.db import models
-from django_elasticsearch_dsl import Document, fields
-from django_elasticsearch_dsl.registries import registry
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
+from django.urls import reverse
+
 
 class Document(models.Model):
-    rubrics = models.JSONField(help_text="Массив рубрик")
-    text = models.TextField(help_text="Текст документа")
-    created_date = models.DateTimeField(auto_now_add=True)
+    rubrics = models.TextField(verbose_name="Рубрики")
+    text = models.TextField(verbose_name="Текст документа")
+    created_date = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
 
     class Meta:
+        verbose_name = "Документ"
+        verbose_name_plural = "Документы"
         ordering = ['-created_date']
 
     def __str__(self):
-        return f"Document {self.id}"
+        return f"Документ {self.id}"
 
-@registry.register_document
+    @property
+    def title(self):
+        """Генерируем заголовок из первых слов текста"""
+        return self.text[:50] + '...' if len(self.text) > 50 else self.text
+
+    def get_absolute_url(self):
+        return reverse('document_detail', kwargs={'pk': self.pk})
+
 class DocumentIndex(Document):
     iD = fields.IntegerField(attr='id')
     text = fields.TextField()
@@ -32,10 +40,3 @@ class DocumentIndex(Document):
         fields = ['created_date']
 
 # Сигналы для автоматического обновления индекса
-@receiver(post_save, sender=Document)
-def update_document_index(sender, instance, **kwargs):
-    DocumentIndex().update(instance)
-
-@receiver(post_delete, sender=Document)
-def delete_document_index(sender, instance, **kwargs):
-    DocumentIndex().delete(instance)

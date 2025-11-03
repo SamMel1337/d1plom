@@ -1,102 +1,140 @@
+# views.py
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.cache import cache_page
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from .models import Document
 from .serializers import DocumentSerializer
 from .search import DocumentSearch
 
 
-# HTML Views
-def index(request):
-    query = request.GET.get('q', '')
-    documents = []
+# HTML Class-Based Views
+class IndexView(View):
+    """Главная страница с поиском"""
+    template_name = 'index.html'
 
-    if query:
-        documents = DocumentSearch.search_documents(query)
+    def get(self, request):
+        query = request.GET.get('q', '')
+        documents = []
 
-    return render(request, 'index.html', {
-        'query': query,
-        'documents': documents
-    })
+        if query:
+            documents = DocumentSearch.search_documents(query)
 
-
-def search_results(request):
-    query = request.GET.get('q', '')
-    documents = []
-
-    if query:
-        documents = DocumentSearch.search_documents(query)
-
-    return render(request, 'search_results.html', {
-        'query': query,
-        'documents': documents
-    })
+        return render(request, self.template_name, {
+            'query': query,
+            'documents': documents
+        })
 
 
-def create_document_page(request):
-    if request.method == 'POST':
+class SearchResultsView(View):
+    """Страница результатов поиска"""
+    template_name = 'results.html'
+
+    def get(self, request):
+        query = request.GET.get('q', '')
+        documents = []
+
+        if query:
+            documents = DocumentSearch.search_documents(query)
+
+        return render(request, self.template_name, {
+            'query': query,
+            'documents': documents
+        })
+
+
+class CreateDocumentView(View):
+    """Создание нового документа"""
+    template_name = 'create_document.html'
+
+    def get(self, request):
+        return render(request, self.template_name)
+
+    def post(self, request):
         rubrics = [r.strip() for r in request.POST.get('rubrics', '').split(',') if r.strip()]
         text = request.POST.get('text', '')
 
         if rubrics and text:
+            # Сохраняем рубрики как строку
             document = Document.objects.create(
-                rubrics=rubrics,
+                rubrics=', '.join(rubrics),  # Сохраняем как строку
                 text=text
             )
             messages.success(request, 'Документ успешно создан!')
-            return redirect('admin-documents')
+            return redirect('Search:admin_documents')
         else:
             messages.error(request, 'Заполните все обязательные поля')
 
-    return render(request, 'create_document.html')
+        return render(request, self.template_name)
 
 
-def admin_documents(request):
-    documents = Document.objects.all().order_by('-created_date')
-    return render(request, 'admin_documents.html', {
-        'documents': documents
-    })
+class AdminDocumentsView(View):
+    """Админка для управления документами"""
+    template_name = 'admin_documents.html'
+
+    def get(self, request):
+        documents = Document.objects.all().order_by('-created_date')
+        return render(request, self.template_name, {
+            'documents': documents
+        })
 
 
-# API Views
-@api_view(['GET'])
-def search_documents_api(request):
-    query = request.GET.get('q', '')
+class DocumentSearchView(View):
+    """Расширенный поиск документов"""
+    template_name = 'search.html'
+    results_per_page = 10
 
-    if not query:
-        return Response(
-            {'error': 'Query parameter "q" is required'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    def get(self, request):
+        return self._handle_search(request)
 
-    documents = DocumentSearch.search_documents(query)
-    serializer = DocumentSerializer(documents, many=True)
+    def _handle_search(self, request):
+        search_params = self._extract_search_params(request)
+        search_results = self._execute_search(search_params)
+        page_obj = self._paginate_results(search_results, search_params['page'])
 
-    return Response({
-        'count': len(documents),
-        'results': serializer.data
-    })
+        context = self._build_context(search_params, page_obj)
+        return render(request, self.template_name, context)
 
+    def _extract_search_params(self, request):
+        return {
+            'query': request.GET.get('q', '').strip(),
+            'title_only': bool(request.GET.get('title_only')),
+            'category': request.GET.get('category', ''),
+            'sort': request.GET.get('sort', 'relevance'),
+            'page': request.GET.get('page', 1),
+        }
 
-@api_view(['DELETE'])
-def delete_document_api(request, document_id):
-    document = get_object_or_404(Document, id=document_id)
-    document.delete()
+    def _execute_search(self, params):
+        if not params['query']:
+            return Document.objects.none()
 
-    return Response(
-        {'message': f'Document {document_id} deleted successfully'},
-        status=status.HTTP_204_NO_CONTENT
-    )
+        # Используем DocumentSearch для поиска
+        return DocumentSearch.search_documents(params['query'])
 
+    def _paginate_results(self, queryset, page_number):
+        paginator = Paginator(queryset, self.results_per_page)
+        try:
+            return paginator.get_page(page_number)
+        except:
+            return paginator.get_page(1)
 
-@api_view(['POST'])
-def create_document_api(request):
-    serializer = DocumentSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def _build_context(self, params, page_obj):
+        return {
+            'query': params['query'],
+            'results': page_obj,
+            'title_only': params['title_only'],
+            'category': params['category'],
+            'sort': params['sort'],
+            'sort_options': [
+                ('relevance', 'По релевантности'),
+                ('newest', 'Сначала новые'),
+                ('oldest', 'Сначала старые'),
+            ]
+        }

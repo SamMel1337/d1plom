@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Поиск документов{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <!-- Форма поиска -->
+    <div class="search-box">
+        <form method="get" action="{% url 'Search:search' %}">
+            <input type="text" name="q" value="{{ query }}" placeholder="Введите поисковый запрос..." class="search-input">
+            <button type="submit" class="search-btn">Найти</button>
+        </form>
+    </div>
+
+    {% if query %}
+        <h2>Результаты поиска для "<span class="search-query">{{ query }}</span>"</h2>
+
+        {% if results %}
+            <div class="results-count">
+                Найдено: {{ results.paginator.count }} результатов
+            </div>
+
+            <!-- Список результатов -->
+            <div class="results-list">
+                {% for item in results %}
+                <div class="result">
+                    <div class="result-title">
+                        <a href="{{ item.get_absolute_url }}">{{ item.title }}</a>
+                    </div>
+                    <div class="result-description">
+                        {{ item.get_snippet|default:item.description|truncatewords:30 }}
+                    </div>
+                    {% if item.created_date %}
+                    <div class="result-meta" style="margin-top: 8px; font-size: 12px; color: #888;">
+                        Дата: {{ item.created_date|date:"d.m.Y" }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Пагинация -->
+            <div class="pagination">
+                {% if results.has_previous %}
+                    <a href="?q={{ query }}&page={{ results.previous_page_number }}">← Предыдущая</a>
+                {% endif %}
+
+                <span class="current">
+                    Страница {{ results.number }} из {{ results.paginator.num_pages }}
+                </span>
+
+                {% if results.has_next %}
+                    <a href="?q={{ query }}&page={{ results.next_page_number }}">Следующая →</a>
+                {% endif %}
+            </div>
+
+        {% else %}
+            <div class="no-results">
+                <p>По вашему запросу "<span class="search-query">{{ query }}</span>" ничего не найдено.</p>
+                <p>Попробуйте изменить поисковый запрос или использовать другие ключевые слова.</p>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <div class="no-results">
+            <h3>Поиск документов</h3>
+            <p>Введите поисковый запрос в поле выше для поиска по документам.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

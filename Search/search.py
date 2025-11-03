@@ -1,29 +1,26 @@
-from elasticsearch_dsl import Search
-from django_elasticsearch_dsl.registries import registry
-from .models import DocumentIndex
+# search.py
+from django.db.models import Q
+from .models import Document
 
 
 class DocumentSearch:
     @staticmethod
-    def search_documents(query_text):
-        search = DocumentIndex.search()
+    def search_documents(query):
+        """Поиск документов по текстовому запросу"""
+        if not query:
+            return Document.objects.none()
 
-        if query_text:
-            search = search.query(
-                'match',
-                text=query_text
-            )
+        return Document.objects.filter(
+            Q(text__icontains=query) |
+            Q(rubrics__icontains=query)
+        ).distinct().order_by('-created_date')
 
-        # Выполняем поиск и получаем ID документов
-        response = search.execute()
-        document_ids = [hit.iD for hit in response]
+    @staticmethod
+    def search_by_rubrics(rubrics):
+        """Поиск документов по рубрикам"""
+        if not rubrics:
+            return Document.objects.none()
 
-        # Получаем документы из БД в правильном порядке
-        from .models import Document
-        documents = Document.objects.filter(id__in=document_ids)
-
-        # Сохраняем порядок из Elasticsearch
-        document_dict = {doc.id: doc for doc in documents}
-        ordered_documents = [document_dict[doc_id] for doc_id in document_ids if doc_id in document_dict]
-
-        return ordered_documents[:20]  # Возвращаем первые 20
+        return Document.objects.filter(
+            rubrics__icontains=rubrics
+        ).order_by('-created_date')

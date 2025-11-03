@@ -1,11 +1,20 @@
 from django.urls import path
-from . import views
+from .views import (
+    IndexView,
+    SearchResultsView,
+    CreateDocumentView,
+    AdminDocumentsView,
+    DocumentSearchView,
+)
+
+app_name = 'Search'
 
 urlpatterns = [
-    # HTML URLs
-    path('', views.index, name='index'),
-    path('search/', views.search_results, name='search-results'),
-    path('create/', views.create_document_page, name='create-document-page'),
-    path('admin/documents/', views.admin_documents, name='admin-documents'),
+    # HTML Views
+    path('', IndexView.as_view(), name='index'),
+    path('search/', DocumentSearchView.as_view(), name='search'),
+    path('results/', SearchResultsView.as_view(), name='results'),
+    path('create/', CreateDocumentView.as_view(), name='create-document'),
+    path('admin/', AdminDocumentsView.as_view(), name='admin-documents'),
 
 ]
