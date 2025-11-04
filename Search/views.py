@@ -68,7 +68,7 @@ class CreateDocumentView(View):
                 text=text
             )
             messages.success(request, 'Документ успешно создан!')
-            return redirect('Search:admin_documents')
+            return redirect('Search:admin-documents')
         else:
             messages.error(request, 'Заполните все обязательные поля')
 
