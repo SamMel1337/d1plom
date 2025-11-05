@@ -38,5 +38,3 @@ class DocumentIndex(Document):
     class Django:
         model = Document
         fields = ['created_date']
-
-# Сигналы для автоматического обновления индекса

@@ -31,6 +31,6 @@ from drf_yasg import openapi
 # )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('Search/', include('Search.urls', namespace='Search')),
+    #path('admin/', admin.site.urls),
+    path('', include('Search.urls', namespace='Search')),
 ]

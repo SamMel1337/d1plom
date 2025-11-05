@@ -1,58 +1,43 @@
-{% extends "base.html" %}
+{{% extends 'base.html' %}
 
-{% block title %}Подтверждение удаления документа{% endblock %}
+{% block title %}Удаление документа {{ document.id }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card border-danger">
+            <div class="card">
                 <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Подтверждение удаления
-                    </h4>
+                    <h4 class="card-title mb-0">Подтверждение удаления</h4>
                 </div>
                 <div class="card-body">
-                    <h5 class="card-title">Вы уверены, что хотите удалить документ?</h5>
-                    
-                    <div class="alert alert-warning">
-                        <strong>Внимание!</strong> Это действие нельзя отменить.
-                    </div>
+                    <p class="alert alert-warning">
+                        <strong>Внимание!</strong> Вы собираетесь удалить документ. Это действие нельзя отменить.
+                    </p>
 
-                    {% if document %}
                     <div class="document-info mb-4">
-                        <h6>Информация о документе:</h6>
-                        <ul class="list-group">
-                            <li class="list-group-item">
-                                <strong>Название:</strong> {{ document.title }}
-                            </li>
-                            {% if document.author %}
-                            <li class="list-group-item">
-                                <strong>Автор:</strong> {{ document.author }}
-                            </li>
-                            {% endif %}
-                            {% if document.created_at %}
-                            <li class="list-group-item">
-                                <strong>Дата создания:</strong> {{ document.created_at|date:"d.m.Y H:i" }}
-                            </li>
+                        <h5>Информация о документе:</h5>
+                        <ul>
+                            <li><strong>ID:</strong> {{ document.id }}</li>
+                            <li><strong>Дата создания:</strong> {{ document.created_date|date:"d.m.Y H:i" }}</li>
+                            {% if document.rubrics %}
+                            <li><strong>Рубрики:</strong> {{ document.rubrics|truncatewords:10 }}</li>
                             {% endif %}
                         </ul>
                     </div>
-                    {% endif %}
 
                     <form method="post">
                         {% csrf_token %}
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'Search:delete' document.id %}"
-                               class="btn btn-outline-danger"
-                               title="Удалить документ"
-                               onclick="return confirm('Вы уверены, что хотите удалить документ #{{ document.id }}?')">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                        <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash"></i> Удалить документ
+                                🗑️ Да, удалить документ
                             </button>
+                            <a href="{% url 'document-detail' document.pk %}" class="btn btn-secondary">
+                                ← Отмена
+                            </a>
+                            <a href="{% url 'list' %}" class="btn btn-outline-secondary">
+                                📋 К списку документов
+                            </a>
                         </div>
                     </form>
                 </div>

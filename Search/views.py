@@ -1,5 +1,5 @@
-# views.py
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import Http404
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -9,7 +9,7 @@ from django.views import View
 from django.views.decorators.cache import cache_page
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.views.generic import DeleteView
+from django.views.generic import DeleteView, DetailView
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -20,7 +20,7 @@ from .search import DocumentSearch
 
 # HTML Class-Based Views
 class IndexView(View):
-    """Главная страница с поиском"""
+    """Главная страница с поиском - доступна всем"""
     template_name = 'results.html'
 
     def get(self, request):
@@ -37,7 +37,7 @@ class IndexView(View):
 
 
 class SearchResultsView(View):
-    """Страница результатов поиска"""
+    """Страница результатов поиска - доступна всем"""
     template_name = 'results.html'
 
     def get(self, request):
@@ -53,9 +53,9 @@ class SearchResultsView(View):
         })
 
 
-class CreateDocumentView(View):
-    """Создание нового документа"""
-    template_name = 'create_document.html'
+class CreateDocumentView( View):
+    """Создание нового документа - требует авторизации"""
+    template_name = 'create_document.html'  # Укажите ваш URL для входа
 
     def get(self, request):
         return render(request, self.template_name)
@@ -79,7 +79,7 @@ class CreateDocumentView(View):
 
 
 class AdminDocumentsView(View):
-    """Админка для управления документами"""
+    """Админка для управления документами - требует авторизации"""
     template_name = 'admin_documents.html'
 
     def get(self, request):
@@ -90,8 +90,8 @@ class AdminDocumentsView(View):
 
 
 class DocumentSearchView(View):
-    """Расширенный поиск документов"""
-    template_name = 'search.html'
+    """Расширенный поиск документов - доступен всем"""
+    template_name = 'results.html'
     results_per_page = 10
 
     def get(self, request):
@@ -111,7 +111,7 @@ class DocumentSearchView(View):
             'title_only': bool(request.GET.get('title_only')),
             'category': request.GET.get('category', ''),
             'sort': request.GET.get('sort', 'relevance'),
-            'page': request.GET.get('page', 1),
+            'page': int(request.GET.get('page', 1)),
         }
 
     def _execute_search(self, params):
@@ -143,15 +143,55 @@ class DocumentSearchView(View):
         }
 
 
-class DocumentDeleteView(LoginRequiredMixin, DeleteView):
+class DocumentDeleteView( DeleteView):
+    """Удаление документа - требует авторизации"""
     model = Document
-    template_name = 'Search/document_confirm_delete.html'
-    success_url = reverse_lazy('list')
+    template_name = 'Search/delete.html'
+    success_url = reverse_lazy('Search:admin_documents')
 
     def get_success_url(self):
         messages.success(self.request, f'Документ "{self.object.title}" был успешно удален.')
         return super().get_success_url()
 
     def get_queryset(self):
-        # Опционально: ограничить удаление только своими документами
-        return Document.objects.filter(owner=self.request.user)
+        return Document.objects.all()
+
+
+class DocumentDetailView(DetailView):
+    """Просмотр деталей документа - доступен всем"""
+    model = Document
+    template_name = 'document_detail.html'
+    context_object_name = 'document'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
+
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        pk = self.kwargs.get('pk')
+        slug = self.kwargs.get('slug')
+
+        if pk:
+            return get_object_or_404(queryset, pk=pk)
+        elif slug:
+            return get_object_or_404(queryset, slug=slug)
+        else:
+            raise Http404("No document found")
+
+
+# API Views - можно также настроить права доступа
+class DocumentListAPIView(APIView):
+    """API для списка документов - настройте права по необходимости"""
+
+    def get(self, request):
+        documents = Document.objects.all()
+        serializer = DocumentSerializer(documents, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = DocumentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

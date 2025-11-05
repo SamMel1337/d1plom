@@ -32,36 +32,31 @@
                     <tr>
                         <td><strong>#{{ document.id }}</strong></td>
                         <td>
-                            {% for rubric in document.rubrics %}
-                            <span class="badge bg-primary me-1">{{ rubric }}</span>
-                            {% endfor %}
+                            <!-- Исправлено: рубрики хранятся как строка, а не список -->
+                            {% with rubrics_list=document.rubrics.split %}
+                                {% for rubric in rubrics_list %}
+                                    {% if rubric.strip %}
+                                    <span class="badge bg-primary me-1">{{ rubric.strip }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endwith %}
                         </td>
                         <td>
                             <div class="text-truncate" style="max-width: 300px;"
                                  title="{{ document.text }}">
-                                {{ document.text }}
+                                {{ document.text|truncatechars:100 }}
                             </div>
                         </td>
                         <td>{{ document.created_date|date:"d.m.Y H:i" }}</td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <!-- Ссылка для просмотра (если есть) -->
-                                {% if 'document_detail' in view.get_urls %}
-                                <a href="{% url 'Search:detail' document.id %}"
+                                <!-- Ссылка для просмотра - ИСПРАВЛЕНО -->
+                                <a href="{% url 'Search:document-detail' document.id %}"
                                    class="btn btn-outline-primary" title="Просмотреть">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                {% endif %}
 
-                                <!-- Ссылка для редактирования (если есть) -->
-                                {% if 'document_update' in view.get_urls %}
-                                <a href="{% url 'Search:document_update' document.id %}"
-                                   class="btn btn-outline-warning" title="Редактировать">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                {% endif %}
-
-                                <!-- Ссылка для удаления -->
+                                <!-- Ссылка для удаления - ИСПРАВЛЕНО -->
                                 <a href="{% url 'Search:delete' document.id %}"
                                    class="btn btn-outline-danger"
                                    title="Удалить документ"
