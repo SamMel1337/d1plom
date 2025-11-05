@@ -4,7 +4,7 @@ from .views import (
     SearchResultsView,
     CreateDocumentView,
     AdminDocumentsView,
-    DocumentSearchView,
+    DocumentSearchView, DocumentDeleteView,
 )
 
 app_name = 'Search'
@@ -16,5 +16,6 @@ urlpatterns = [
     path('results/', SearchResultsView.as_view(), name='results'),
     path('create/', CreateDocumentView.as_view(), name='create-document'),
     path('admin/', AdminDocumentsView.as_view(), name='admin-documents'),
+    path('delete/', DocumentDeleteView.as_view(), name='delete')
 
 ]

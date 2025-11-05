@@ -1,12 +1,15 @@
 # views.py
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import cache_page
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.views.generic import DeleteView
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -18,7 +21,7 @@ from .search import DocumentSearch
 # HTML Class-Based Views
 class IndexView(View):
     """Главная страница с поиском"""
-    template_name = 'index.html'
+    template_name = 'results.html'
 
     def get(self, request):
         query = request.GET.get('q', '')
@@ -138,3 +141,17 @@ class DocumentSearchView(View):
                 ('oldest', 'Сначала старые'),
             ]
         }
+
+
+class DocumentDeleteView(LoginRequiredMixin, DeleteView):
+    model = Document
+    template_name = 'Search/document_confirm_delete.html'
+    success_url = reverse_lazy('list')
+
+    def get_success_url(self):
+        messages.success(self.request, f'Документ "{self.object.title}" был успешно удален.')
+        return super().get_success_url()
+
+    def get_queryset(self):
+        # Опционально: ограничить удаление только своими документами
+        return Document.objects.filter(owner=self.request.user)
