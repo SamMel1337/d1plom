@@ -28,10 +28,10 @@
                 {% for item in results %}
                 <div class="result">
                     <div class="result-title">
-                        <a href="{{ item.get_absolute_url }}">{{ item.title }}</a>
+                        <a href="/search/{{ item.pk }}/">{{ item.title }}</a>
                     </div>
                     <div class="result-description">
-                        {{ item.get_snippet|default:item.description|truncatewords:30 }}
+                        {{ item.description|truncatewords:30 }}
                     </div>
                     {% if item.created_date %}
                     <div class="result-meta" style="margin-top: 8px; font-size: 12px; color: #888;">

@@ -148,7 +148,7 @@ class DocumentDeleteView( DeleteView):
     model = Document
     template_name = 'Search/delete.html'
     uccess_message = 'Запись успешно удалена!'
-    success_url = reverse_lazy('Search:admin_documents.html')
+    success_url = 'Search:admin_documents.html'
 
     def get_success_url(self):
         messages.success(self.request, f'Документ "{self.object.title}" был успешно удален.')
@@ -164,8 +164,6 @@ class DocumentDetailView(DetailView):
     model = Document
     template_name = 'document_detail.html'
     context_object_name = 'document'
-    slug_field = 'slug'
-    slug_url_kwarg = 'slug'
 
     def get_object(self, queryset=None):
         if queryset is None:
