@@ -7,6 +7,12 @@ class Document(models.Model):
     rubrics = models.TextField(verbose_name="Рубрики")
     text = models.TextField(verbose_name="Текст документа")
     created_date = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    author = models.ForeignKey(
+        'auth.User',
+        on_delete=models.CASCADE,
+        null=True,  # Сначала разрешите null для существующих записей
+        blank=True
+    )
 
     class Meta:
         verbose_name = "Документ"

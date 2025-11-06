@@ -1,42 +1,95 @@
-{{% extends 'base.html' %}
+{% extends 'base.html' %}
 
-{% block title %}Удаление документа {{ document.id }}{% endblock %}
+{% block title %}Удаление документа {{ object.id }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
+            <div class="card border-danger">
                 <div class="card-header bg-danger text-white">
-                    <h4 class="card-title mb-0">Подтверждение удаления</h4>
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Подтверждение удаления
+                    </h4>
                 </div>
                 <div class="card-body">
-                    <p class="alert alert-warning">
-                        <strong>Внимание!</strong> Вы собираетесь удалить документ. Это действие нельзя отменить.
-                    </p>
-
-                    <div class="document-info mb-4">
-                        <h5>Информация о документе:</h5>
-                        <ul>
-                            <li><strong>ID:</strong> {{ document.id }}</li>
-                            <li><strong>Дата создания:</strong> {{ document.created_date|date:"d.m.Y H:i" }}</li>
-                            {% if document.rubrics %}
-                            <li><strong>Рубрики:</strong> {{ document.rubrics|truncatewords:10 }}</li>
-                            {% endif %}
-                        </ul>
+                    <!-- Основное предупреждение -->
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-skull-crossbones"></i> Опасная операция!
+                        </h5>
+                        <p class="mb-0">
+                            Вы собираетесь удалить документ. Это действие <strong>нельзя отменить</strong>.
+                            Все данные будут утеряны безвозвратно.
+                        </p>
                     </div>
 
-                    <form method="post">
+                    <!-- Информация о документе -->
+                    <div class="document-info mb-4 p-3 border rounded bg-light">
+                        <h5 class="text-danger mb-3">
+                            <i class="fas fa-file-alt"></i> Информация о документе:
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <strong>ID:</strong>
+                                        <span class="badge bg-secondary">{{ object.id }}</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Название:</strong>
+                                        <span class="fw-bold text-dark">{{ object.title|default:"Без названия" }}</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Дата создания:</strong>
+                                        {{ object.created_date|date:"d.m.Y H:i"|default:"Не указана" }}
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    {% if object.rubrics %}
+                                    <li class="mb-2">
+                                        <strong>Рубрики:</strong>
+                                        <div class="mt-1">
+                                            {% for rubric in object.rubrics.all %}
+                                                <span class="badge bg-info me-1">{{ rubric.name }}</span>
+                                            {% empty %}
+                                                <span class="text-muted">Рубрики не указаны</span>
+                                            {% endfor %}
+                                        </div>
+                                    </li>
+                                    {% endif %}
+                                    {% if object.author %}
+                                    <li class="mb-2">
+                                        <strong>Автор:</strong> {{ object.author.get_full_name|default:object.author.username }}
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Дополнительное предупреждение -->
+                    <div class="alert alert-warning">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Пожалуйста, убедитесь:</strong> что это именно тот документ, который вы хотите удалить.
+                        </small>
+                    </div>
+
+                    <!-- Форма удаления -->
+                    <form method="post" id="deleteForm">
                         {% csrf_token %}
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-danger">
-                                🗑️ Да, удалить документ
+                        <div class="d-flex flex-column flex-md-row gap-2">
+                            <button type="submit" class="btn btn-danger flex-fill" id="deleteBtn">
+                                <i class="fas fa-trash-alt"></i> Да, удалить документ безвозвратно
                             </button>
-                            <a href="{% url 'document-detail' document.pk %}" class="btn btn-secondary">
-                                ← Отмена
+                            <a href="{% url 'document-detail' object.pk %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Вернуться к документу
                             </a>
-                            <a href="{% url 'list' %}" class="btn btn-outline-secondary">
-                                📋 К списку документов
+                            <a href="{% url 'list' %}" class="btn btn-secondary">
+                                <i class="fas fa-list"></i> К списку документов
                             </a>
                         </div>
                     </form>

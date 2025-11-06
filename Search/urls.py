@@ -17,7 +17,7 @@ urlpatterns = [
     path('results/', SearchResultsView.as_view(), name='results'),
     path('create/', CreateDocumentView.as_view(), name='create-document'),
     path('admin/', AdminDocumentsView.as_view(), name='admin-documents'),
-    path('search/<int:id>/', DocumentDeleteView.as_view(), name='delete'),
-    path('document/<int:id>/', views.DocumentDetailView.as_view(), name='document-detail'),
+    path('search/<int:pk>/', DocumentDeleteView.as_view(), name='delete'),
+    path('document/<int:pk>/', views.DocumentDetailView.as_view(), name='document-detail'),
 
 ]

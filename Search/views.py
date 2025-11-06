@@ -147,11 +147,13 @@ class DocumentDeleteView( DeleteView):
     """Удаление документа - требует авторизации"""
     model = Document
     template_name = 'Search/delete.html'
-    success_url = reverse_lazy('Search:admin_documents')
+    uccess_message = 'Запись успешно удалена!'
+    success_url = reverse_lazy('Search:admin_documents.html')
 
     def get_success_url(self):
         messages.success(self.request, f'Документ "{self.object.title}" был успешно удален.')
         return super().get_success_url()
+        #return reverse_lazy('Search:admin_documents.html')
 
     def get_queryset(self):
         return Document.objects.all()
