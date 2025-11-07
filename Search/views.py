@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from .models import Document
 from .serializers import DocumentSerializer
 from .search import DocumentSearch
+from django.urls import reverse_lazy
 
 
 # HTML Class-Based Views
@@ -143,17 +144,16 @@ class DocumentSearchView(View):
         }
 
 
-class DocumentDeleteView( DeleteView):
+class DocumentDeleteView(DeleteView):
     """Удаление документа - требует авторизации"""
     model = Document
-    template_name = 'Search/delete.html'
-    uccess_message = 'Запись успешно удалена!'
-    success_url = 'Search:admin_documents.html'
+    template_name = 'delete.html'
+    success_message = 'Запись успешно удалена!'
+    success_url = reverse_lazy('Search:admin-documents')
 
     def get_success_url(self):
         messages.success(self.request, f'Документ "{self.object.title}" был успешно удален.')
-        return super().get_success_url()
-        #return reverse_lazy('Search:admin_documents.html')
+        return reverse_lazy('Search:admin-documents')
 
     def get_queryset(self):
         return Document.objects.all()
