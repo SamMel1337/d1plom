@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление документа {{ document.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Подтверждение удаления
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">Внимание!</h5>
+                        <p class="mb-0">
+                            Вы собираетесь удалить документ <strong>#{{ document.id }}</strong>.
+                            Это действие нельзя отменить.
+                        </p>
+                    </div>
+
+                    <!-- Информация о документе -->
+                    <div class="document-info mb-4 p-3 border rounded bg-light">
+                        <h6>Текст документа:</h6>
+                        <p class="mb-2">{{ document.text|truncatechars:200 }}</p>
+
+                        <h6>Рубрики:</h6>
+                        <p class="mb-0">
+                            {% if document.rubrics %}
+                                {{ document.rubrics }}
+                            {% else %}
+                                <span class="text-muted">Рубрики не указаны</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <!-- Форма удаления -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i> Удалить
+                            </button>
+                            <a href="{% url 'Search:admin-documents' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

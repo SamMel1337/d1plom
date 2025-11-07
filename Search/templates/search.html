@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Поиск документов{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <!-- Заголовок -->
+    <div class="search-header">
+        <h1>Поиск документов</h1>
+        <p>Найдите нужные документы по ключевым словам</p>
+    </div>
+
+    <!-- Основная форма поиска -->
+    <div class="search-form">
+        <form method="get" action="{% url 'Search:search' %}">
+            <div class="search-input-group">
+                <input type="text"
+                       name="q"
+                       value="{{ query|default:'' }}"
+                       placeholder="Введите ключевые слова для поиска..."
+                       class="search-input"
+                       autofocus>
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i> Найти
+                </button>
+            </div>
+
+            <!-- Дополнительные параметры поиска -->
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <label>
+                    <input type="checkbox" name="title_only" value="1"> Только в заголовках
+                </label>
+                <label>
+                    <select name="sort" style="padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                        <option value="relevance">По релевантности</option>
+                        <option value="newest">Сначала новые</option>
+                        <option value="oldest">Сначала старые</option>
+                    </select>
+                </label>
+            </div>
+        </form>
+
+        <!-- Примеры поиска -->
+        <div class="search-examples">
+            <p>Примеры:
+                <span onclick="document.querySelector('.search-input').value = this.textContent; document.querySelector('form').submit();">годовой отчет</span>
+                <span onclick="document.querySelector('.search-input').value = this.textContent; document.querySelector('form').submit();">техническая документация</span>
+                <span onclick="document.querySelector('.search-input').value = this.textContent; document.querySelector('form').submit();">протокол собрания</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Быстрые ссылки -->
+    <div class="quick-links">
+        <a href="?q=отчет" class="quick-link">
+            <strong>Отчеты</strong>
+            <div style="font-size: 12px; color: #666;">Годовые, квартальные, месячные</div>
+        </a>
+        <a href="?q=договор" class="quick-link">
+            <strong>Договоры</strong>
+            <div style="font-size: 12px; color: #666;">Соглашения и контракты</div>
+        </a>
+        <a href="?q=протокол" class="quick-link">
+            <strong>Протоколы</strong>
+            <div style="font-size: 12px; color: #666;">Заседания и собрания</div>
+        </a>
+        <a href="?q=инструкция" class="quick-link">
+            <strong>Инструкции</strong>
+            <div style="font-size: 12px; color: #666;">Руководства и мануалы</div>
+        </a>
+    </div>
+
+    <!-- Блок с результатами поиска -->
+    {% if query %}
+    <div class="results-container">
+        <div class="results-count">
+            {% if results %}
+                Найдено документов: <strong>{{ results.paginator.count }}</strong>
+                {% if results.paginator.num_pages > 1 %}
+                    (Страница {{ results.number }} из {{ results.paginator.num_pages }})
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {% if results %}
+            <!-- Список результатов -->
+            <div class="results-list">
+                {% for item in results %}
+                <div class="result-item">
+                    <div class="result-title">
+                        <a href="{{ item.get_absolute_url }}">{{ item.title }}</a>
+                    </div>
+                    <div class="result-snippet">
+                        {{ item.get_snippet|default:item.description|truncatewords:40 }}
+                    </div>
+                    <div class="result-meta">
+                        {% if item.category %}
+                        <span>Категория: {{ item.category }}</span>
+                        {% endif %}
+                        {% if item.created_date %}
+                        <span> • Дата: {{ item.created_date|date:"d.m.Y" }}</span>
+                        {% endif %}
+                        {% if item.file_size %}
+                        <span> • Размер: {{ item.file_size }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Пагинация -->
+            {% if results.has_other_pages %}
+            <div class="pagination">
+                {% if results.has_previous %}
+                    <a href="?q={{ query }}&page={{ results.previous_page_number }}">← Назад</a>
+                {% endif %}
+
+                {% for num in results.paginator.page_range %}
+                    {% if results.number == num %}
+                        <span class="current">{{ num }}</span>
+                    {% else %}
+                        <a href="?q={{ query }}&page={{ num }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if results.has_next %}
+                    <a href="?q={{ query }}&page={{ results.next_page_number }}">Вперед →</a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        {% else %}
+            <div class="no-results">
+                <h3>Ничего не найдено</h3>
+                <p>По запросу "<strong>{{ query }}</strong>" документов не найдено.</p>
+                <p>Попробуйте:</p>
+                <ul style="text-align: left; display: inline-block;">
+                    <li>Проверить правильность написания</li>
+                    <li>Использовать другие ключевые слова</li>
+                    <li>Упростить запрос</li>
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Недавние поиски -->
+    {% if not query %}
+    <div class="recent-searches">
+        <h3>Популярные запросы</h3>
+        <div class="recent-tags">
+            <span class="recent-tag" onclick="document.querySelector('.search-input').value = this.textContent; document.querySelector('form').submit();">финансовый отчет 2024</span>
+            <span class="recent-tag" onclick="document.querySelector('.search-input').value = this.textContent; document.querySelector('form').submit();">техническое задание</span>
+            <span class="recent-tag" onclick="document.querySelector('.search-input').value = this.textContent; document.querySelector('form').submit();">кадровые документы</span>
+            <span class="recent-tag" onclick="document.querySelector('.search-input').value = this.textContent; document.querySelector('form').submit();">бухгалтерские отчеты</span>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
